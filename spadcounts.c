@@ -73,7 +73,7 @@ int main(int argc, char* argv[]) {
   }
 
   if(argc<2) {
-    fprintf(stderr,"usage: spadcoinc [options] infile.bin\n\n");
+    fprintf(stderr,"usage: %s [options] infile.bin\n\n", argv[0]);
     fprintf(stderr,"options:\n");
     fprintf(stderr,"    -a           ASCII output (default)\n");
     fprintf(stderr,"    -b           binary output\n");
