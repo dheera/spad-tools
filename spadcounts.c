@@ -1,3 +1,13 @@
+// Data reader for 32x32 photon counting array from Politecnico di Milano
+// Contact: Dheera Venkatraman <dheera@dheera.net>
+//
+// Usage: spadcounts myfile.bin
+//
+// Output:
+// ASCII lines formatted as
+// [frame number (0-16383N)] [pixel number (0-1024)] [time bin number (0-1024)]
+// (may change to binary format default in future)
+
 #include<stdio.h>
 #include<string.h>
 #include<stddef.h>
@@ -93,7 +103,11 @@ int main(int argc, char* argv[]) {
       }
     }
 
+    if(j%32==0) {
+      printf("Reading frame %d ...\r", j);
+    }
   }
+  printf("done                              \n");
 
   fclose(infile);
   fclose(outfile);
