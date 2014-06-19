@@ -73,15 +73,15 @@ int main(int argc, char* argv[]) {
   }
 
   if(argc<2) {
-    fprintf(stderr,"usage: %s [options] infile.bin\n\n", argv[0]);
+    fprintf(stderr,"usage: spadcounts [options] infile.bin\n\n");
     fprintf(stderr,"options:\n");
-    fprintf(stderr,"    -a           ASCII output (default)\n");
-    fprintf(stderr,"    -b           binary output\n");
+    fprintf(stderr,"    -a           ASCII output\n");
+    fprintf(stderr,"    -b           binary output (default)\n");
     fprintf(stderr,"    -o outfile   output file name\n\n");
     exit(-1);
   }
 
-  short int options_format = FORMAT_ASCII;
+  short int options_format = FORMAT_BINARY;
 
   sprintf(outfile_name, "%s.out", argv[argc-1]);
 
