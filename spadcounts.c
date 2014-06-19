@@ -142,7 +142,7 @@ int main(int argc, char* argv[]) {
       }
     }
 
-    if(j%32==0) {
+    if(j%256==0) {
       printf("Reading frame %d ...\r", j);
     }
   }
