@@ -51,7 +51,8 @@ int main(int argc, char* argv[]) {
   FILE* infile;
   FILE* outfile;
   int result;
-  int i,j,k;
+  unsigned int i;
+  unsigned long int j;
   char c;
   uint32_t b;
 
@@ -130,10 +131,10 @@ int main(int argc, char* argv[]) {
     for(i=0;i<1024;i++) {
       if(current_frame.t[i]!=65535) {
         if(options_format==FORMAT_ASCII) {
-          fprintf(outfile, "%d %d %d\n", j, i, current_frame.t[i]);
+          fprintf(outfile, "%ld %d %d\n", j, i, current_frame.t[i]);
         } else if(options_format==FORMAT_BINARY) {
-          // [16 bits: frame#] [16 bits: pixel#] [16 bits: bin#]
-          b = (j<<16) | i;
+          // [22 bits: frame#] [10 bits: bin#] [16 bits: pixel#]
+          b = (j<<10) | i;
           fwrite(&b, 4, 1, outfile);
           fwrite(&current_frame.t[i], 2, 1, outfile);
         } else if(options_format==FORMAT_COMPACT) {
@@ -142,8 +143,8 @@ int main(int argc, char* argv[]) {
       }
     }
 
-    if(j%256==0) {
-      printf("Reading frame %d ...\r", j);
+    if(j%32==0) {
+      printf("Reading frame %ld ...\r", j);
     }
   }
   printf("done                              \n");
