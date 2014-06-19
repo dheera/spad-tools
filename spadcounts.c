@@ -43,37 +43,67 @@ typedef union {
   } bits;
 } spadStop;
 
+const int FORMAT_ASCII = 0;
+const int FORMAT_BINARY = 1;
+const int FORMAT_COMPACT = 2;
+
 int main(int argc, char* argv[]) {
   FILE* infile;
   FILE* outfile;
   int result;
   int i,j,k;
   char c;
-
-
-  unsigned int pixel_indexes[1024];
-
-  for(i=0;i<1024;i++) {
-    if(i%2) {
-      pixel_indexes[i] = (0b1111100000 ^ ( (31-(i/64))<<5 ) ) |
-                         (0b0000000000 ^ (i/2 & 0b0000011111 ) );
-    } else {
-      pixel_indexes[i] = (0b1111100000 ^ ( (i+1)/2 & 0b1111100000 ) ) |
-                         (0b0000000000 ^ ( (i+1)/2 & 0b0000011111 ) );
-    }
-  }
+  uint32_t b;
 
   spadRecord raw_records[1024];
   spadStop raw_stop;
   spadFrame current_frame;
   char outfile_name[1024];
 
-  if((infile=fopen(argv[1],"rb"))==NULL) {
+  unsigned int pixel_indexes[1024];
+
+  for(i=0;i<1024;i++) {
+    if(i%2) {
+      pixel_indexes[i] = ( 0b1111100000 ^ ( (31-(i/64))<<5 ) ) |
+                         ( i/2 & 0b0000011111 );
+    } else {
+      pixel_indexes[i] = ( 0b1111100000 ^ ( (i+1)/2 & 0b1111100000 ) ) |
+                         ( (i+1)/2 & 0b0000011111 );
+    }
+  }
+
+  if(argc<2) {
+    fprintf(stderr,"usage: spadcoinc [options] infile.bin\n\n");
+    fprintf(stderr,"options:\n");
+    fprintf(stderr,"    -a           ASCII output (default)\n");
+    fprintf(stderr,"    -b           binary output\n");
+    fprintf(stderr,"    -o outfile   output file name\n\n");
+    exit(-1);
+  }
+
+  short int options_format = FORMAT_ASCII;
+
+  sprintf(outfile_name, "%s.out", argv[argc-1]);
+
+  for(i=1;i<argc-1;i++) {
+    if(strcmp(argv[i],"-a")==0) {
+      options_format = FORMAT_ASCII;
+    }
+    if(strcmp(argv[i],"-b")==0) {
+      options_format = FORMAT_BINARY;
+    }
+    if(strcmp(argv[i],"-c")==0) {
+      options_format = FORMAT_COMPACT;
+    }
+    if(strcmp(argv[i-1],"-o")==0) {
+      strcpy(outfile_name, argv[i]);
+    }
+  }
+
+  if((infile=fopen(argv[argc-1],"rb"))==NULL) {
     fprintf(stderr,"error: unable to open file for reading: %s\n", argv[1]);
     exit(1);
   }
-
-  sprintf(outfile_name, "%s.out", argv[1]);
 
   if((outfile=fopen(outfile_name,"wb"))==NULL) {
     fprintf(stderr,"error: unable to open file for writing: %s\n", argv[2]);
@@ -99,7 +129,16 @@ int main(int argc, char* argv[]) {
 
     for(i=0;i<1024;i++) {
       if(current_frame.t[i]!=65535) {
-        fprintf(outfile, "%d %d %d\n", j, i, current_frame.t[i]);
+        if(options_format==FORMAT_ASCII) {
+          fprintf(outfile, "%d %d %d\n", j, i, current_frame.t[i]);
+        } else if(options_format==FORMAT_BINARY) {
+          // [16 bits: frame#] [16 bits: pixel#] [16 bits: bin#]
+          b = (j<<16) | i;
+          fwrite(&b, 4, 1, outfile);
+          fwrite(&current_frame.t[i], 2, 1, outfile);
+        } else if(options_format==FORMAT_COMPACT) {
+
+        }
       }
     }
 
