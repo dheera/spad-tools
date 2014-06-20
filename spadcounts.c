@@ -14,6 +14,8 @@
 #include<stdlib.h>
 #include<inttypes.h>
 
+FILE* fopen64(const char *filename, const char *type);
+
 typedef struct {
  unsigned int t[1024];
 } spadFrame;
@@ -114,12 +116,12 @@ int main(int argc, char* argv[]) {
     sprintf(outfile_name, "%s", outfile_name_stem);
   }
 
-  if((infile=fopen(argv[argc-1],"rb"))==NULL) {
+  if((infile=fopen64(argv[argc-1],"rb"))==NULL) {
     fprintf(stderr,"error: unable to open file for reading: %s\n", argv[argc-1]);
     exit(1);
   }
 
-  if((outfile=fopen(outfile_name,"wb"))==NULL) {
+  if((outfile=fopen64(outfile_name,"wb"))==NULL) {
     fprintf(stderr,"error: unable to open file for writing: %s\n", outfile_name);
     exit(1);
   }
@@ -135,7 +137,7 @@ int main(int argc, char* argv[]) {
     if(j > 0 && options_splitfile > 0 && j%options_splitfile ==0) {
       fclose(outfile);
       sprintf(outfile_name, "%s-%d", outfile_name_stem, splitfile_count++);
-      if((outfile=fopen(outfile_name,"wb"))==NULL) {
+      if((outfile=fopen64(outfile_name,"wb"))==NULL) {
         fprintf(stderr,"error: unable to open file for writing: %s\n", outfile_name);
         exit(1);
       }
