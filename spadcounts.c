@@ -15,7 +15,7 @@
 #include<inttypes.h>
 
 typedef struct {
-  uint16_t t[1024];
+ unsigned int t[1024];
 } spadFrame;
 
 typedef union {
@@ -54,7 +54,7 @@ int main(int argc, char* argv[]) {
   unsigned int i;
   unsigned long int j;
   char c;
-  uint32_t b;
+  uint64_t outrec;
 
   spadRecord raw_records[1024];
   spadStop raw_stop;
@@ -63,6 +63,7 @@ int main(int argc, char* argv[]) {
   char outfile_name_stem[1024];
   unsigned long int options_splitfile = 0;
   int splitfile_count = 0;
+  signed int current_time;
 
   unsigned int pixel_indexes[1024];
 
@@ -128,6 +129,7 @@ int main(int argc, char* argv[]) {
 
     result = fread(raw_records, sizeof(spadRecord), 1024, infile);
     if(result<1024) break;
+
     result = fread(&raw_stop, sizeof(spadStop), 1, infile);
     if(result<1) break;
 
@@ -139,15 +141,18 @@ int main(int argc, char* argv[]) {
         exit(1);
       }
     }
-
     
     for(i=0;i<1024;i++) {
       if(raw_records[i].bits.coarse == 0b00111111) {
         current_frame.t[pixel_indexes[i]] = 65535;
       } else {
-        current_frame.t[pixel_indexes[i]] =
-          (raw_records[i].bits.coarse<<4 | raw_stop.bits.stop)
+        current_time = (raw_records[i].bits.coarse<<4 | raw_stop.bits.stop)
           - raw_records[i].bits.fine;
+        if(current_time >= 0) {
+          current_frame.t[pixel_indexes[i]] = current_time;
+        } else {
+          current_frame.t[pixel_indexes[i]] = 65535;
+        }
       }
     }
 
@@ -156,19 +161,19 @@ int main(int argc, char* argv[]) {
         if(options_format==FORMAT_ASCII) {
           fprintf(outfile, "%ld %d %d\n", j, i, current_frame.t[i]);
         } else if(options_format==FORMAT_BINARY) {
-          // [22 bits: frame#] [10 bits: bin#] [16 bits: pixel#]
-          b = (j<<10) | i;
-          fwrite(&b, 4, 1, outfile);
-          fwrite(&current_frame.t[i], 2, 1, outfile);
+          outrec = ((uint64_t)j<<32) | ((uint64_t)i<<16) | ((uint64_t)current_frame.t[i]);
+          fwrite(&outrec, 8, 1, outfile);
         } else if(options_format==FORMAT_COMPACT) {
-          b = (j<<10 | current_frame.t[i]); // compact not finished
-          fwrite(&b, 3, 1, outfile);
+          // compact not finished
+          // b = (j<<10 | current_frame.t[i]);
+          // fwrite(&b, 3, 1, outfile);
         }
       }
     }
 
-    if(j%32==0) {
+    if(j%4096==0) {
       printf("Reading frame %ld ...\r", j);
+      fflush(stdout);
     }
   }
   printf("done                              \n");
