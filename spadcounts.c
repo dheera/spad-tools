@@ -146,10 +146,9 @@ int main(int argc, char* argv[]) {
       if(raw_records[i].bits.coarse == 0b00111111) {
         current_frame.t[pixel_indexes[i]] = 65535;
       } else {
-        current_time_0 = (raw_records[i].bits.coarse<<4 | raw_stop.bits.stop);
-        if(current_time_0 >= raw_records[i].bits.fine) {
-          current_frame.t[pixel_indexes[i]] = current_time_0 - raw_records[i].bits.fine;
-        } else {
+        current_frame.t[pixel_indexes[i]] = (raw_records[i].bits.coarse<<4 | raw_stop.bits.stop) - raw_records[i].bits.fine;
+        // if previous was "negative", we kill it to 65535
+        if(current_frame.t[pixel_indexes[i]] > 32767) {
           current_frame.t[pixel_indexes[i]] = 65535;
         }
       }
