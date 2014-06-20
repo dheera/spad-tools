@@ -63,7 +63,7 @@ int main(int argc, char* argv[]) {
   char outfile_name_stem[1024];
   unsigned long int options_splitfile = 0;
   int splitfile_count = 0;
-  signed int current_time;
+  unsigned int current_time_0;
 
   unsigned int pixel_indexes[1024];
 
@@ -146,10 +146,9 @@ int main(int argc, char* argv[]) {
       if(raw_records[i].bits.coarse == 0b00111111) {
         current_frame.t[pixel_indexes[i]] = 65535;
       } else {
-        current_time = (raw_records[i].bits.coarse<<4 | raw_stop.bits.stop)
-          - raw_records[i].bits.fine;
-        if(current_time >= 0) {
-          current_frame.t[pixel_indexes[i]] = current_time;
+        current_time_0 = (raw_records[i].bits.coarse<<4 | raw_stop.bits.stop);
+        if(current_time_0 >= raw_records[i].bits.fine) {
+          current_frame.t[pixel_indexes[i]] = current_time_0 - raw_records[i].bits.fine;
         } else {
           current_frame.t[pixel_indexes[i]] = 65535;
         }
