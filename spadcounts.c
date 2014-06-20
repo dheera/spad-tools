@@ -60,6 +60,9 @@ int main(int argc, char* argv[]) {
   spadStop raw_stop;
   spadFrame current_frame;
   char outfile_name[1024];
+  char outfile_name_stem[1024];
+  unsigned long int options_splitfile = 0;
+  int splitfile_count = 0;
 
   unsigned int pixel_indexes[1024];
 
@@ -76,19 +79,26 @@ int main(int argc, char* argv[]) {
   if(argc<2) {
     fprintf(stderr,"usage: spadcounts [options] infile.bin\n\n");
     fprintf(stderr,"options:\n");
-    fprintf(stderr,"    -a           ASCII output\n");
-    fprintf(stderr,"    -b           binary output (default)\n");
-    fprintf(stderr,"    -o outfile   output file name\n\n");
+    fprintf(stderr,"    -a            ASCII output\n");
+    fprintf(stderr,"    -b            binary output (default)\n");
+    fprintf(stderr,"    -o file.out   output to filename.out\n");
+    fprintf(stderr,"    -s N          new output file every N frames\n\n");
     exit(-1);
   }
 
   short int options_format = FORMAT_BINARY;
 
-  sprintf(outfile_name, "%s.out", argv[argc-1]);
+  sprintf(outfile_name_stem, "%s.out", argv[argc-1]);
 
   for(i=1;i<argc-1;i++) {
     if(strcmp(argv[i-1],"-o")==0) {
-      strcpy(outfile_name, argv[i]);
+      strcpy(outfile_name_stem, argv[i]);
+    } if(strcmp(argv[i-1],"-s")==0) {
+      options_splitfile = atol(argv[i]);
+      if(options_splitfile < 0) {
+        fprintf(stderr,"error: invalid parameter for -s: %s\n", argv[i]);
+        exit(1);
+      }
     } else if(strcmp(argv[i],"-a")==0) {
       options_format = FORMAT_ASCII;
     } else if(strcmp(argv[i],"-b")==0) {
@@ -98,13 +108,19 @@ int main(int argc, char* argv[]) {
     }
   }
 
+  if(options_splitfile > 0) {
+    sprintf(outfile_name, "%s-%d", outfile_name_stem, splitfile_count++);
+  } else {
+    sprintf(outfile_name, "%s", outfile_name_stem);
+  }
+
   if((infile=fopen(argv[argc-1],"rb"))==NULL) {
-    fprintf(stderr,"error: unable to open file for reading: %s\n", argv[1]);
+    fprintf(stderr,"error: unable to open file for reading: %s\n", argv[argc-1]);
     exit(1);
   }
 
   if((outfile=fopen(outfile_name,"wb"))==NULL) {
-    fprintf(stderr,"error: unable to open file for writing: %s\n", argv[2]);
+    fprintf(stderr,"error: unable to open file for writing: %s\n", outfile_name);
     exit(1);
   }
 
@@ -114,6 +130,16 @@ int main(int argc, char* argv[]) {
     if(result<1024) break;
     result = fread(&raw_stop, sizeof(spadStop), 1, infile);
     if(result<1) break;
+
+    if(j > 0 && options_splitfile > 0 && j%options_splitfile ==0) {
+      fclose(outfile);
+      sprintf(outfile_name, "%s-%d", outfile_name_stem, splitfile_count++);
+      if((outfile=fopen(outfile_name,"wb"))==NULL) {
+        fprintf(stderr,"error: unable to open file for writing: %s\n", outfile_name);
+        exit(1);
+      }
+    }
+
     
     for(i=0;i<1024;i++) {
       if(raw_records[i].bits.coarse == 0b00111111) {
