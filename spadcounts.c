@@ -87,17 +87,14 @@ int main(int argc, char* argv[]) {
   sprintf(outfile_name, "%s.out", argv[argc-1]);
 
   for(i=1;i<argc-1;i++) {
-    if(strcmp(argv[i],"-a")==0) {
-      options_format = FORMAT_ASCII;
-    }
-    if(strcmp(argv[i],"-b")==0) {
-      options_format = FORMAT_BINARY;
-    }
-    if(strcmp(argv[i],"-c")==0) {
-      options_format = FORMAT_COMPACT;
-    }
     if(strcmp(argv[i-1],"-o")==0) {
       strcpy(outfile_name, argv[i]);
+    } else if(strcmp(argv[i],"-a")==0) {
+      options_format = FORMAT_ASCII;
+    } else if(strcmp(argv[i],"-b")==0) {
+      options_format = FORMAT_BINARY;
+    } else if(strcmp(argv[i],"-c")==0) {
+      options_format = FORMAT_COMPACT;
     }
   }
 
@@ -138,7 +135,8 @@ int main(int argc, char* argv[]) {
           fwrite(&b, 4, 1, outfile);
           fwrite(&current_frame.t[i], 2, 1, outfile);
         } else if(options_format==FORMAT_COMPACT) {
-
+          b = (j<<10 | current_frame.t[i]); // compact not finished
+          fwrite(&b, 3, 1, outfile);
         }
       }
     }
