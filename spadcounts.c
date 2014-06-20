@@ -63,7 +63,6 @@ int main(int argc, char* argv[]) {
   char outfile_name_stem[1024];
   unsigned long int options_splitfile = 0;
   int splitfile_count = 0;
-  unsigned int current_time_0;
 
   unsigned int pixel_indexes[1024];
 
